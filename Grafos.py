@@ -1,7 +1,7 @@
-
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
+import time
 
 # =============================================================================
 # 1. DATOS
@@ -36,39 +36,32 @@ def construir_matriz_distancias():
             matriz[j, i] = d
     return matriz
 
-# --- FUNCIÓN CORREGIDA PARA NOMBRES LARGOS ---
 def mostrar_matriz(matriz, nombres):
     ancho_col = 16
     ancho_nombre_fila = 16
-    # Calculamos el ancho total 
     ancho_total = ancho_nombre_fila + (ancho_col * len(nombres))
     print("\n" + "="*ancho_total)
     print(f"{'MATRIZ DE DISTANCIAS (Grados Euclidianos)':^{ancho_total}}")
     print("="*ancho_total)
 
-    # 1. Imprimir Encabezado
     header = f"{'':<{ancho_nombre_fila}}" + "".join([f"{nombre:>{ancho_col}}" for nombre in nombres])
     print(header)
     print("-" * len(header))
-    # 2. Imprimir Filas
     for i, fila in enumerate(matriz):
-        # Nombre de la ciudad a la izquierda
         linea = f"{nombres[i]:<{ancho_nombre_fila}}"
         for val in fila:
             if val == 0:
-                # Poner un guion en la diagonal (distancia 0)
                 linea += f"{'-':>{ancho_col}}"
             else:
-                # Formatear a 4 decimales y usar el ancho correcto
                 linea += f"{val:{ancho_col}.4f}"
         print(linea)
     print("-" * len(header))
     print(f"{'* Los valores representan distancia euclidiana plana.':^{ancho_total}}\n")
 
 def busqueda_exhaustiva(matriz_dist):
-    print("\n" + "="*40)
-    print("INICIANDO BUSQUEDA EXHAUSTIVA")
-    print("="*40)
+    print("\n" + "="*60)
+    print("INICIANDO: ALGORITMO DE BUSQUEDA EXHAUSTIVA")
+    print("="*60)
     
     indices = list(range(n))
     inicio = 0
@@ -93,7 +86,7 @@ def busqueda_exhaustiva(matriz_dist):
             historial.append((list(mejor_ruta), mejor_dist))
             
             ruta_nombres = " -> ".join([nombres_ciudades[idx] for idx in mejor_ruta])
-            print(f"[Intento #{contador}] NUEVO RECORD ENCONTRADO!")
+            print(f"[Intento #{contador}] ¡RECORD ENCONTRADO!")
             print(f"   Ruta: {ruta_nombres}")
             print(f"   Distancia: {mejor_dist:.4f}")
             print("-" * 20)
@@ -102,9 +95,9 @@ def busqueda_exhaustiva(matriz_dist):
     return mejor_ruta, mejor_dist, historial
 
 def vecino_mas_cercano(matriz_dist, inicio=0):
-    print("\n" + "="*40)
-    print("INICIANDO HEURISTICA VECINO MAS CERCANO")
-    print("="*40)
+    print("\n" + "="*60)
+    print("INICIANDO: ALGORITMO DE VECINO MAS CERCANO")
+    print("="*60)
     
     ruta = [inicio]
     visitadas = {inicio}
@@ -173,11 +166,11 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
         if es_optimo:
             ruta_idxs, dist = paso
             color = 'red'
-            info = f"Distancia Record: {dist:.4f}"
+            info = f"Record Actual: {dist:.4f}"
         else:
             ruta_idxs = paso
             color = 'green'
-            info = "Buscando siguiente ciudad..."
+            info = "Explorando..."
             
         r_lats = [coordenadas[nombres_ciudades[idx]][0] for idx in ruta_idxs]
         r_lons = [coordenadas[nombres_ciudades[idx]][1] for idx in ruta_idxs]
@@ -193,27 +186,56 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
     plt.show()
 
 # =============================================================================
-# 4. EJECUCION
+# 4. EJECUCION 
 # =============================================================================
-if __name__ == "__main__":
-    matriz = construir_matriz_distancias()
-    
-    # Printear matriz completa sin recortes
-    mostrar_matriz(matriz, nombres_ciudades)
-    
-    ruta_ex, dist_ex, hist_ex = busqueda_exhaustiva(matriz)
-    ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz)
-    
-    print("\n" + "="*40)
-    print("CALCULOS FINALIZADOS. INICIANDO GRAFICOS...")
-    print("="*40)
-    
-    print("\n--- MODO VISUALIZACION EN VIVO ---")
-    input("Presiona ENTER para ver la animacion de Heuristica (Vecino Mas Cercano)...")
-    reproducir_en_vivo(hist_nn, "Heuristica Vecino Mas Cercano", es_optimo=False, velocidad=0.8)
-    
-    print("\nLa ventana anterior mostro el resultado final.")
-    input("Cierra la ventana del grafico y presiona ENTER para ver la animacion de Busqueda Exhaustiva...")
-    reproducir_en_vivo(hist_ex, "Busqueda Exhaustiva (Mejorando Rutas)", es_optimo=True, velocidad=0.5)
-    
-    print("\n¡Demostracion finalizada!")
+
+matriz = construir_matriz_distancias()
+mostrar_matriz(matriz, nombres_ciudades)
+
+# --- MEDICION ALGORITMO DE BUSQUEDA EXHAUSTIVA ---
+t_inicio_ex = time.time()
+ruta_ex, dist_ex, hist_ex = busqueda_exhaustiva(matriz)
+t_fin_ex = time.time()
+tiempo_ex = t_fin_ex - t_inicio_ex
+
+# --- MEDICION ALGORITMO DE VECINO MAS CERCANO ---
+t_inicio_nn = time.time()
+ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz)
+t_fin_nn = time.time()
+tiempo_nn = t_fin_nn - t_inicio_nn
+
+# --- TABLA COMPARATIVA CON NOMBRES LARGOS ---
+# Ajustamos el ancho de la primera columna a 35 caracteres
+ancho_nombre = 35
+ancho_tabla = ancho_nombre + 15 + 15 + 6 # +6 por los separadores ' | '
+
+print("\n" + "="*ancho_tabla)
+print(f"{'COMPARATIVA DE RENDIMIENTO':^{ancho_tabla}}")
+print("="*ancho_tabla)
+print(f"{'Nombre del Algoritmo':<{ancho_nombre}} | {'Tiempo (seg)':<15} | {'Distancia Total':<15}")
+print("-" * ancho_tabla)
+
+print(f"{'Algoritmo de Busqueda Exhaustiva':<{ancho_nombre}} | {tiempo_ex:<15.6f} | {dist_ex:<15.4f}")
+print(f"{'Algoritmo de Vecino Mas Cercano':<{ancho_nombre}} | {tiempo_nn:<15.6f} | {dist_nn:<15.4f}")
+print("-" * ancho_tabla)
+
+# --- ANALISIS ---
+if dist_nn == dist_ex:
+    conclusion = "CONCLUSION: Empate!"
+else:
+    diff = ((dist_nn - dist_ex) / dist_ex) * 100
+    conclusion = f"CONCLUSION: El Vecino Mas Cercano fue un {diff:.2f}% menos eficiente."
+
+print(conclusion)
+print("="*ancho_tabla)
+
+# --- GRAFICOS ---
+print("\n--- MODO VISUALIZACION EN VIVO ---")
+input("Presiona ENTER para ver: Algoritmo de Vecino Mas Cercano...")
+reproducir_en_vivo(hist_nn, "Algoritmo de Vecino Mas Cercano", es_optimo=False, velocidad=0.8)
+
+print("\nLa ventana anterior mostro el resultado.")
+input("Cierra la ventana y presiona ENTER para ver: Algoritmo de Busqueda Exhaustiva...")
+reproducir_en_vivo(hist_ex, "Algoritmo de Busqueda Exhaustiva", es_optimo=True, velocidad=0.5)
+
+print("\nFIN")
