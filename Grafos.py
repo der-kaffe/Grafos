@@ -1,4 +1,3 @@
-# tsp_grafo_completo.py
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
@@ -39,6 +38,30 @@ def construir_matriz_distancias():
             matriz[i, j] = d
             matriz[j, i] = d
     return matriz
+
+# ---------------------------------------------------
+#  Función para mostrar la matriz de distancias
+# ---------------------------------------------------
+def mostrar_matriz(matriz, nombres):
+    ancho_col = 16
+    ancho_nombre_fila = 16
+    ancho_total = ancho_nombre_fila + (ancho_col * len(nombres))
+    print("\n" + "="*ancho_total)
+    print(f"{'MATRIZ DE DISTANCIAS (Grados Euclidianos)':^{ancho_total}}")
+    print("="*ancho_total)
+
+    header = f"{'':<{ancho_nombre_fila}}" + "".join([f"{nombre:>{ancho_col}}" for nombre in nombres])
+    print(header)
+    print("-" * len(header))
+    for i, fila in enumerate(matriz):
+        linea = f"{nombres[i]:<{ancho_nombre_fila}}"
+        for val in fila:
+            if val == 0:
+                linea += f"{'-':>{ancho_col}}"
+            else:
+                linea += f"{val:{ancho_col}.4f}"
+        print(linea)
+    print("-" * len(header))
 
 # ---------------------------------------------------
 #  Búsqueda exhaustiva (exacta)
@@ -188,10 +211,8 @@ def animar_historial(historial, titulo, velocidad=0.8, es_exhaustivo=False):
 def main():
     matriz = construir_matriz_distancias()
 
-    # imprime matriz (simple)
-    print("Matriz de distancias (euclidiana):")
-    np.set_printoptions(precision=4, suppress=True)
-    print(matriz)
+    # imprime matriz
+    mostrar_matriz(matriz, nombres_ciudades)
 
     # 1) Exhaustivo (medición de tiempo)
     t0 = time.time()
@@ -218,7 +239,11 @@ def main():
     else:
         print("\nNo se pudo calcular gap (división por cero o falta de óptimo).")
 
-    # Mostrar grafico final: grafo completo con ambas rutas superpuestas
+    # Mostrar camino tomado (en formato requerido)
+    camino = " $\to$ ".join([nombres_ciudades[i] for i in ruta_ex])
+    print(f"\nCamino tomado: {{ {camino} }}")
+
+    # Mostrar gráfico final: grafo completo con ambas rutas superpuestas
     ciudades = [coordenadas[name] for name in nombres_ciudades]
     fig, ax = plt.subplots(figsize=(8,8))
     fig.canvas.manager.set_window_title("Grafo Completo con Rutas")
