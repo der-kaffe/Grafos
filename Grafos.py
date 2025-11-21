@@ -1,11 +1,11 @@
 import numpy as np
 import itertools
-import time
 import matplotlib.pyplot as plt
 
 # =============================================================================
 # 1. DATOS
 # =============================================================================
+# Las coordenadas son las plazas de armas de cada sitio
 coordenadas = {
     "Temuco": (-38.7392, -72.5904),
     "Villarrica": (-39.2779, -72.2274),
@@ -20,7 +20,7 @@ nombres_ciudades = list(coordenadas.keys())
 n = len(nombres_ciudades)
 
 # =============================================================================
-# 2. LOGICA MATEMAATICA 
+# 2. LOGICA MATEMATICA 
 # =============================================================================
 def distancia_euclidiana(c1_idx, c2_idx):
     lat1, lon1 = coordenadas[nombres_ciudades[c1_idx]]
@@ -38,7 +38,7 @@ def construir_matriz_distancias():
 
 def busqueda_exhaustiva(matriz_dist):
     print("\n" + "="*40)
-    print("INICIANDO BuSQUEDA EXHAUSTIVA (LOG)")
+    print("INICIANDO BUSQUEDA EXHAUSTIVA (LOG)")
     print("="*40)
     
     indices = list(range(n))
@@ -68,7 +68,7 @@ def busqueda_exhaustiva(matriz_dist):
             
             # --- PRINT INFO ---
             ruta_nombres = " -> ".join([nombres_ciudades[idx] for idx in mejor_ruta])
-            print(f"[Intento #{contador}] ¡NUEVO ReCORD ENCONTRADO!")
+            print(f"[Intento #{contador}] ¡NUEVO RECORD ENCONTRADO!")
             print(f"   Ruta: {ruta_nombres}")
             print(f"   Distancia: {mejor_dist:.4f}")
             print("-" * 20)
@@ -78,7 +78,7 @@ def busqueda_exhaustiva(matriz_dist):
 
 def vecino_mas_cercano(matriz_dist, inicio=0):
     print("\n" + "="*40)
-    print("INICIANDO HEURiSTICA VECINO MaS CERCANO (LOG)")
+    print("INICIANDO HEURISTICA VECINO MAS CERCANO")
     print("="*40)
     
     ruta = [inicio]
@@ -106,7 +106,7 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
                     siguiente = vecino
         
         # Tomar decision
-        print(f"   >>> DECISIoN: El mas cercano es {nombres_ciudades[siguiente]} ({mejor_dist_local:.4f})")
+        print(f"   >>> DECISION: El mas cercano es {nombres_ciudades[siguiente]} ({mejor_dist_local:.4f})")
         
         dist_total += mejor_dist_local
         actual = siguiente
@@ -177,13 +177,11 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
 # =============================================================================
 if __name__ == "__main__":
     matriz = construir_matriz_distancias()
-    
-    # Esto imprimira todo el texto en la consola primero
     ruta_ex, dist_ex, hist_ex = busqueda_exhaustiva(matriz)
     ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz)
     
     print("\n" + "="*40)
-    print("CaLCULOS FINALIZADOS. INICIANDO GRAFICOS...")
+    print("CALCULOS FINALIZADOS. INICIANDO GRAFICOS...")
     print("="*40)
     
     print("\n--- MODO VISUALIZACIoN EN VIVO ---")
