@@ -56,7 +56,6 @@ def mostrar_matriz(matriz, nombres):
                 linea += f"{val:{ancho_col}.4f}"
         print(linea)
     print("-" * len(header))
-    print(f"{'* Los valores representan distancia euclidiana plana.':^{ancho_total}}\n")
 
 def busqueda_exhaustiva(matriz_dist):
     print("\n" + "="*60)
