@@ -20,14 +20,13 @@ coordenadas = {
 '''
 
 coordenadas = {
-    "Temuco": (-38.7392, -72.5903),
-    "Villarrica": (-39.2779, -72.2275),
-    "Pucon": (-39.2729, -71.9777),
-    "Angol": (-37.7985, -72.7095),
-    "Victoria": (-38.1756, -72.3358),
-    "Lautaro": (-38.5337, -72.4353),
-    "Nueva Imperial": (-38.7447, -72.9521)
+    "Nueva York": (40.7128, -74.0060),
+    "Los Ángeles": (34.0522, -118.2437),
+    "Chicago": (41.8781, -87.6298),
+    "Houston": (29.7604, -95.3698),
+    "Phoenix": (33.4484, -112.0740)
 }
+
 
 nombres_ciudades = list(coordenadas.keys())
 n = len(nombres_ciudades)
