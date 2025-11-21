@@ -156,6 +156,7 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
 # =============================================================================
 
 def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5):
+    plt.rcParams.update({'font.size': 18})  
     plt.ion()
     fig, ax = plt.subplots(figsize=(8, 8))
     fig.canvas.manager.set_window_title(titulo_ventana)
@@ -163,7 +164,7 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
     for i, paso in enumerate(historial):
         ax.clear()
         
-        ax.set_title(f"{titulo_ventana}\nEstado: {i+1}/{len(historial)}", fontsize=12)
+        ax.set_title(f"{titulo_ventana}\nEstado: {i+1}/{len(historial)}", fontsize=18)
         ax.set_xlabel("Longitud")
         ax.set_ylabel("Latitud")
         
@@ -173,7 +174,7 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
         
         for idx, txt in enumerate(nombres_ciudades):
             ax.annotate(txt, (lons[idx], lats[idx]), xytext=(5, 5), 
-                        textcoords='offset points', fontsize=9)
+                        textcoords='offset points', fontsize=18)
         
         if es_optimo:
             ruta_idxs, dist = paso
