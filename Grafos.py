@@ -67,7 +67,7 @@ def mostrar_matriz(matriz, nombres):
 
 def busqueda_exhaustiva(matriz_dist):
     print("\n" + "="*40)
-    print("INICIANDO BUSQUEDA EXHAUSTIVA (LOG)")
+    print("INICIANDO BUSQUEDA EXHAUSTIVA")
     print("="*40)
     
     indices = list(range(n))
@@ -93,7 +93,7 @@ def busqueda_exhaustiva(matriz_dist):
             historial.append((list(mejor_ruta), mejor_dist))
             
             ruta_nombres = " -> ".join([nombres_ciudades[idx] for idx in mejor_ruta])
-            print(f"[Intento #{contador}] ¡NUEVO RECORD ENCONTRADO!")
+            print(f"[Intento #{contador}] NUEVO RECORD ENCONTRADO!")
             print(f"   Ruta: {ruta_nombres}")
             print(f"   Distancia: {mejor_dist:.4f}")
             print("-" * 20)
