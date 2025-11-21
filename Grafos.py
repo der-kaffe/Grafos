@@ -1,24 +1,12 @@
+# tsp_grafo_completo.py
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 import time
 
-# =============================================================================
-# 1. DATOS
-# =============================================================================
-
-'''
-Datos de google maps sobre las plazas de armas de cada sitio
-coordenadas = {
-    "Temuco": (-38.73924804905055, -72.59037442500298),
-    "Villarrica": (-39.277930266287626, -72.22750273186602),
-    "Pucón": (-39.272975881908295, -71.97773335885098),
-    "Angol": (-37.79859525844711, -72.7095697866449),
-    "Victoria": (-38.1756178907116, -72.3358133749394),
-    "Lautaro": (-38.53371314846101, -72.43532045597144),
-    "Nueva Imperial": (-38.744786477975666, -72.95210789444599)
-'''
-
+# ----------------------------
+#  Datos (cámbialos si quieres)
+# ----------------------------
 coordenadas = {
     "Nueva York": (40.670, -73.940),
     "Los Ángeles": (34.110, -118.410),
@@ -29,19 +17,21 @@ coordenadas = {
     "San Antonio": (29.460, -98.510)
 }
 
-
+# Lista de nombres y cantidad
 nombres_ciudades = list(coordenadas.keys())
 n = len(nombres_ciudades)
 
-# =============================================================================
-# 2. LOGICA MATEMATICA 
-# =============================================================================
+# ---------------------------------------------------
+#  Funciones matemáticas y construcción de la matriz
+# ---------------------------------------------------
 def distancia_euclidiana(c1_idx, c2_idx):
+    """Distancia euclidiana entre ciudad índice c1_idx y c2_idx."""
     lat1, lon1 = coordenadas[nombres_ciudades[c1_idx]]
     lat2, lon2 = coordenadas[nombres_ciudades[c2_idx]]
     return np.sqrt((lon2 - lon1)**2 + (lat2 - lat1)**2)
 
 def construir_matriz_distancias():
+    """Construye la matriz simétrica n x n de distancias."""
     matriz = np.zeros((n, n))
     for i in range(n):
         for j in range(i + 1, n):
@@ -50,206 +40,203 @@ def construir_matriz_distancias():
             matriz[j, i] = d
     return matriz
 
-def mostrar_matriz(matriz, nombres):
-    ancho_col = 16
-    ancho_nombre_fila = 16
-    ancho_total = ancho_nombre_fila + (ancho_col * len(nombres))
-    print("\n" + "="*ancho_total)
-    print(f"{'MATRIZ DE DISTANCIAS (Grados Euclidianos)':^{ancho_total}}")
-    print("="*ancho_total)
-
-    header = f"{'':<{ancho_nombre_fila}}" + "".join([f"{nombre:>{ancho_col}}" for nombre in nombres])
-    print(header)
-    print("-" * len(header))
-    for i, fila in enumerate(matriz):
-        linea = f"{nombres[i]:<{ancho_nombre_fila}}"
-        for val in fila:
-            if val == 0:
-                linea += f"{'-':>{ancho_col}}"
-            else:
-                linea += f"{val:{ancho_col}.4f}"
-        print(linea)
-    print("-" * len(header))
-
+# ---------------------------------------------------
+#  Búsqueda exhaustiva (exacta)
+# ---------------------------------------------------
 def busqueda_exhaustiva(matriz_dist):
-    print("\n" + "="*60)
-    print("INICIANDO: ALGORITMO DE BUSQUEDA EXHAUSTIVA")
-    print("="*60)
-    
+    """
+    Prueba todas las permutaciones (fija inicio en 0) y devuelve:
+    mejor_ruta (lista de índices empezando y terminando en 0),
+    mejor_dist, historial_de_record [(ruta, dist), ...]
+    """
     indices = list(range(n))
     inicio = 0
     otros = indices[1:]
     mejor_dist = float('inf')
-    mejor_ruta = []
-    historial = []
-    
+    mejor_ruta = None
+    historial = []  # guardamos solo cuando aparece un nuevo record
     contador = 0
 
     for perm in itertools.permutations(otros):
         contador += 1
         ruta_actual = [inicio] + list(perm) + [inicio]
-        
-        dist_actual = 0
+        # calc distancia total de la ruta_actual
+        dist_actual = 0.0
         for i in range(len(ruta_actual) - 1):
-            dist_actual += matriz_dist[ruta_actual[i], ruta_actual[i+1]]
-            
+            a = ruta_actual[i]; b = ruta_actual[i+1]
+            dist_actual += matriz_dist[a, b]
+
         if dist_actual < mejor_dist:
             mejor_dist = dist_actual
-            mejor_ruta = ruta_actual
-            historial.append((list(mejor_ruta), mejor_dist))
-            
-            ruta_nombres = " -> ".join([nombres_ciudades[idx] for idx in mejor_ruta])
-            print(f"[Intento #{contador}] ¡RECORD ENCONTRADO!")
-            print(f"   Ruta: {ruta_nombres}")
-            print(f"   Distancia: {mejor_dist:.4f}")
-            print("-" * 20)
-            
-    print(f"Total de rutas evaluadas: {contador}")
+            mejor_ruta = route_copy = list(ruta_actual)
+            historial.append((route_copy, mejor_dist))  # guardamos el nuevo record
+
     return mejor_ruta, mejor_dist, historial
 
+# ---------------------------------------------------
+#  Heurística: Vecino Más Cercano (NN)
+# ---------------------------------------------------
 def vecino_mas_cercano(matriz_dist, inicio=0):
-    print("\n" + "="*60)
-    print("INICIANDO: ALGORITMO DE VECINO MAS CERCANO")
-    print("="*60)
-    
+    """
+    Realiza la construcción greedy desde 'inicio'.
+    Devuelve ruta (lista índices, cerrada), distancia total, y historial de rutas parciales.
+    """
     ruta = [inicio]
     visitadas = {inicio}
     actual = inicio
-    dist_total = 0
-    historial = [list(ruta)]
-    
-    print(f"Inicio en: {nombres_ciudades[inicio]}")
-    
+    dist_total = 0.0
+    historial = [list(ruta)]  # iremos agregando pasos para la animación
+
     while len(visitadas) < n:
         mejor_dist_local = float('inf')
-        siguiente = -1
-        
-        print(f"\nEstoy en {nombres_ciudades[actual]}, mirando vecinos:")
-        
+        siguiente = None
+        # buscar el vecino no visitado más cercano
         for vecino in range(n):
-            if vecino not in visitadas:
-                d = matriz_dist[actual, vecino]
-                print(f"   -> Candidato: {nombres_ciudades[vecino]} (Distancia: {d:.4f})")
-                
-                if d < mejor_dist_local:
-                    mejor_dist_local = d
-                    siguiente = vecino
-        
-        print(f"   >>> DECISION: El mas cercano es {nombres_ciudades[siguiente]} ({mejor_dist_local:.4f})")
-        
+            if vecino in visitadas:
+                continue
+            d = matriz_dist[actual, vecino]
+            if d < mejor_dist_local:
+                mejor_dist_local = d
+                siguiente = vecino
+        # mover al siguiente
         dist_total += mejor_dist_local
         actual = siguiente
         ruta.append(actual)
         visitadas.add(actual)
         historial.append(list(ruta))
-    
-    dist_retorno = matriz_dist[actual, inicio]
-    print(f"\nTodas las ciudades visitadas. Regresando a {nombres_ciudades[inicio]} (Distancia: {dist_retorno:.4f})")
-    
-    dist_total += dist_retorno
+
+    # volver al inicio
+    dist_total += matriz_dist[actual, inicio]
     ruta.append(inicio)
     historial.append(list(ruta))
-    
     return ruta, dist_total, historial
 
-# =============================================================================
-# 3. VISUALIZACION EN VIVO
-# =============================================================================
+# ---------------------------------------------------
+#  Visualización: grafo completo + resaltado de ruta
+# ---------------------------------------------------
+def dibujar_grafo_completo(ax, ciudades, color_arista='#cccccc'):
+    """
+    Dibuja en el eje ax todas las aristas del grafo completo con color ligero.
+    ciudades: lista de (lat, lon) en el orden de nombres_ciudades
+    """
+    lats = [c[0] for c in ciudades]
+    lons = [c[1] for c in ciudades]
 
-def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5):
-    plt.rcParams.update({'font.size': 18})  
+    # dibujar todas las aristas (i,j) con i<j
+    for i in range(len(ciudades)):
+        for j in range(i+1, len(ciudades)):
+            ax.plot([lons[i], lons[j]], [lats[i], lats[j]], color=color_arista, linewidth=0.8, zorder=1)
+
+    # dibujar nodos y etiquetas
+    ax.scatter(lons, lats, c='blue', s=80, zorder=3)
+    for idx, name in enumerate(nombres_ciudades):
+        ax.annotate(name, (lons[idx], lats[idx]), xytext=(5,5), textcoords='offset points', fontsize=9, zorder=4)
+
+def resaltar_ruta(ax, ruta_idxs, color='red', ancho=3, etiqueta=None):
+    """
+    Dibuja la ruta (lista de índices, por ejemplo [0,2,3,0]) sobre ax
+    """
+    lats_r = [coordenadas[nombres_ciudades[i]][0] for i in ruta_idxs]
+    lons_r = [coordenadas[nombres_ciudades[i]][1] for i in ruta_idxs]
+    ax.plot(lons_r, lats_r, color=color, linewidth=ancho, zorder=5, label=etiqueta)
+
+# ---------------------------------------------------
+#  Animación simple (paso a paso)
+# ---------------------------------------------------
+def animar_historial(historial, titulo, velocidad=0.8, es_exhaustivo=False):
+    """
+    historial: para NN -> lista de rutas parciales [ [0], [0,3], [0,3,1], ... ]
+              para exhaustivo -> historial de records -> [(ruta,dist), ...]
+    es_exhaustivo: si True, cada elemento de historial es (ruta, dist)
+    """
+    ciudades = [coordenadas[name] for name in nombres_ciudades]
     plt.ion()
-    fig, ax = plt.subplots(figsize=(8, 8))
-    fig.canvas.manager.set_window_title(titulo_ventana)
-    
+    fig, ax = plt.subplots(figsize=(8,8))
+    fig.canvas.manager.set_window_title(titulo)
+
     for i, paso in enumerate(historial):
         ax.clear()
-        
-        ax.set_title(f"{titulo_ventana}\nEstado: {i+1}/{len(historial)}", fontsize=18)
-        ax.set_xlabel("Longitud")
-        ax.set_ylabel("Latitud")
-        
-        lats = [coordenadas[c][0] for c in nombres_ciudades]
-        lons = [coordenadas[c][1] for c in nombres_ciudades]
-        ax.scatter(lons, lats, c='blue', s=100, zorder=5)
-        
-        for idx, txt in enumerate(nombres_ciudades):
-            ax.annotate(txt, (lons[idx], lats[idx]), xytext=(5, 5), 
-                        textcoords='offset points', fontsize=18)
-        
-        if es_optimo:
+        ax.set_title(f"{titulo}  (Paso {i+1}/{len(historial)})")
+        ax.set_xlabel("Longitud (lon)")
+        ax.set_ylabel("Latitud (lat)")
+
+        # dibujar grafo completo en gris
+        dibujar_grafo_completo(ax, ciudades)
+
+        # dependiendo del tipo, extraemos la ruta
+        if es_exhaustivo:
             ruta_idxs, dist = paso
-            color = 'red'
-            info = f"Record Actual: {dist:.4f}"
+            etiqueta = f"Record actual: {dist:.4f}"
+            resaltar_ruta(ax, ruta_idxs, color='red', ancho=3, etiqueta=etiqueta)
+            ax.legend(loc='upper right')
         else:
             ruta_idxs = paso
-            color = 'green'
-            info = "Explorando..."
-            
-        r_lats = [coordenadas[nombres_ciudades[idx]][0] for idx in ruta_idxs]
-        r_lons = [coordenadas[nombres_ciudades[idx]][1] for idx in ruta_idxs]
-        
-        ax.plot(r_lons, r_lats, c=color, linewidth=2, label=info)
-        ax.legend(loc='upper right')
-        ax.grid(True, linestyle='--', alpha=0.5)
-        
+            etiqueta = f"Construcción NN (paso {i+1})"
+            resaltar_ruta(ax, ruta_idxs + [] , color='green', ancho=3, etiqueta=etiqueta)
+            ax.legend(loc='upper right')
+
+        ax.grid(True, linestyle='--', alpha=0.4)
         plt.draw()
         plt.pause(velocidad)
-        
+
     plt.ioff()
     plt.show()
 
-# =============================================================================
-# 4. EJECUCION 
-# =============================================================================
+# ---------------------------------------------------
+#  Ejecución principal
+# ---------------------------------------------------
+def main():
+    matriz = construir_matriz_distancias()
 
-matriz = construir_matriz_distancias()
-mostrar_matriz(matriz, nombres_ciudades)
+    # imprime matriz (simple)
+    print("Matriz de distancias (euclidiana):")
+    np.set_printoptions(precision=4, suppress=True)
+    print(matriz)
 
-# --- MEDICION ALGORITMO DE BUSQUEDA EXHAUSTIVA ---
-t_inicio_ex = time.time()
-ruta_ex, dist_ex, hist_ex = busqueda_exhaustiva(matriz)
-t_fin_ex = time.time()
-tiempo_ex = t_fin_ex - t_inicio_ex
+    # 1) Exhaustivo (medición de tiempo)
+    t0 = time.time()
+    ruta_ex, dist_ex, hist_ex = busqueda_exhaustiva(matriz)
+    t1 = time.time()
+    tiempo_ex = t1 - t0
+    print("\nExhaustivo: ruta óptima (índices) =", ruta_ex)
+    print("Exhaustivo: distancia óptima =", dist_ex)
+    print(f"Tiempo exhaustivo: {tiempo_ex:.4f} s")
 
-# --- MEDICION ALGORITMO DE VECINO MAS CERCANO ---
-t_inicio_nn = time.time()
-ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz)
-t_fin_nn = time.time()
-tiempo_nn = t_fin_nn - t_inicio_nn
+    # 2) Vecino más cercano (medición de tiempo)
+    t0 = time.time()
+    ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz, inicio=0)
+    t1 = time.time()
+    tiempo_nn = t1 - t0
+    print("\nVecino más cercano: ruta (índices) =", ruta_nn)
+    print("Vecino más cercano: distancia =", dist_nn)
+    print(f"Tiempo NN: {tiempo_nn:.4f} s")
 
-# --- TABLA COMPARATIVA  ---
-# Ajustamos el ancho de la primera columna a 35 caracteres
-ancho_nombre = 35
-ancho_tabla = ancho_nombre + 15 + 15 + 6 # +6 por los separadores ' | '
+    # Gap / comparación
+    if dist_ex is not None and dist_ex > 0:
+        gap = (dist_nn - dist_ex) / dist_ex * 100
+        print(f"\nGap (NN vs óptimo) = {gap:.2f} %")
+    else:
+        print("\nNo se pudo calcular gap (división por cero o falta de óptimo).")
 
-print("\n" + "="*ancho_tabla)
-print(f"{'COMPARATIVA DE RENDIMIENTO':^{ancho_tabla}}")
-print("="*ancho_tabla)
-print(f"{'Nombre del Algoritmo':<{ancho_nombre}} | {'Tiempo (seg)':<15} | {'Distancia Total':<15}")
-print("-" * ancho_tabla)
+    # Mostrar grafico final: grafo completo con ambas rutas superpuestas
+    ciudades = [coordenadas[name] for name in nombres_ciudades]
+    fig, ax = plt.subplots(figsize=(8,8))
+    fig.canvas.manager.set_window_title("Grafo Completo con Rutas")
+    dibujar_grafo_completo(ax, ciudades)
+    resaltar_ruta(ax, ruta_ex, color='red', ancho=3, etiqueta=f"Óptimo ({dist_ex:.4f})")
+    resaltar_ruta(ax, ruta_nn, color='green', ancho=2, etiqueta=f"NN ({dist_nn:.4f})")
+    ax.legend(loc='upper right')
+    ax.set_xlabel("Longitud (lon)")
+    ax.set_ylabel("Latitud (lat)")
+    ax.grid(True, linestyle='--', alpha=0.4)
+    plt.show()
 
-print(f"{'Algoritmo de Busqueda Exhaustiva':<{ancho_nombre}} | {tiempo_ex:<15.6f} | {dist_ex:<15.4f}")
-print(f"{'Algoritmo de Vecino Mas Cercano':<{ancho_nombre}} | {tiempo_nn:<15.6f} | {dist_nn:<15.4f}")
-print("-" * ancho_tabla)
+    # Animaciones paso a paso (primero NN, luego exhaustivo records)
+    input("\nPresiona ENTER para ver la animación del Vecino Más Cercano...")
+    animar_historial(hist_nn, "Vecino Más Cercano (construcción paso a paso)", velocidad=0.8, es_exhaustivo=False)
 
-# --- ANALISIS ---
-if dist_nn == dist_ex:
-    conclusion = "CONCLUSION: Empate!"
-else:
-    diff = ((dist_nn - dist_ex) / dist_ex) * 100
-    conclusion = f"CONCLUSION: El Vecino Mas Cercano fue un {diff:.2f}% menos eficiente."
+    input("Presiona ENTER para ver la animación del Exhaustivo (records encontrados)...")
+    animar_historial(hist_ex, "Exhaustivo (records encontrados durante la búsqueda)", velocidad=0.6, es_exhaustivo=True)
 
-print(conclusion)
-print("="*ancho_tabla)
-
-# --- GRAFICOS ---
-print("\n--- MODO VISUALIZACION EN VIVO ---")
-input("Presiona ENTER para ver: Algoritmo de Vecino Mas Cercano...")
-reproducir_en_vivo(hist_nn, "Algoritmo de Vecino Mas Cercano", es_optimo=False, velocidad=0.8)
-
-print("\nLa ventana anterior mostro el resultado.")
-input("Cierra la ventana y presiona ENTER para ver: Algoritmo de Busqueda Exhaustiva...")
-reproducir_en_vivo(hist_ex, "Algoritmo de Busqueda Exhaustiva", es_optimo=True, velocidad=0.5)
-
-print("\nFIN")
+if __name__ == "__main__":
+    main()
