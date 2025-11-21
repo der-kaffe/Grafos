@@ -1,3 +1,4 @@
+
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
@@ -5,7 +6,6 @@ import matplotlib.pyplot as plt
 # =============================================================================
 # 1. DATOS
 # =============================================================================
-# Las coordenadas son las plazas de armas de cada sitio
 coordenadas = {
     "Temuco": (-38.7392, -72.5904),
     "Villarrica": (-39.2779, -72.2274),
@@ -36,6 +36,35 @@ def construir_matriz_distancias():
             matriz[j, i] = d
     return matriz
 
+# --- FUNCIÓN CORREGIDA PARA NOMBRES LARGOS ---
+def mostrar_matriz(matriz, nombres):
+    ancho_col = 16
+    ancho_nombre_fila = 16
+    # Calculamos el ancho total 
+    ancho_total = ancho_nombre_fila + (ancho_col * len(nombres))
+    print("\n" + "="*ancho_total)
+    print(f"{'MATRIZ DE DISTANCIAS (Grados Euclidianos)':^{ancho_total}}")
+    print("="*ancho_total)
+
+    # 1. Imprimir Encabezado
+    header = f"{'':<{ancho_nombre_fila}}" + "".join([f"{nombre:>{ancho_col}}" for nombre in nombres])
+    print(header)
+    print("-" * len(header))
+    # 2. Imprimir Filas
+    for i, fila in enumerate(matriz):
+        # Nombre de la ciudad a la izquierda
+        linea = f"{nombres[i]:<{ancho_nombre_fila}}"
+        for val in fila:
+            if val == 0:
+                # Poner un guion en la diagonal (distancia 0)
+                linea += f"{'-':>{ancho_col}}"
+            else:
+                # Formatear a 4 decimales y usar el ancho correcto
+                linea += f"{val:{ancho_col}.4f}"
+        print(linea)
+    print("-" * len(header))
+    print(f"{'* Los valores representan distancia euclidiana plana.':^{ancho_total}}\n")
+
 def busqueda_exhaustiva(matriz_dist):
     print("\n" + "="*40)
     print("INICIANDO BUSQUEDA EXHAUSTIVA (LOG)")
@@ -50,23 +79,19 @@ def busqueda_exhaustiva(matriz_dist):
     
     contador = 0
 
-    # Probamos todas las permutaciones
     for perm in itertools.permutations(otros):
         contador += 1
         ruta_actual = [inicio] + list(perm) + [inicio]
         
-        # Calcular distancia
         dist_actual = 0
         for i in range(len(ruta_actual) - 1):
             dist_actual += matriz_dist[ruta_actual[i], ruta_actual[i+1]]
             
-        # Si encontramos un nuevo record, lo printeamos
         if dist_actual < mejor_dist:
             mejor_dist = dist_actual
             mejor_ruta = ruta_actual
             historial.append((list(mejor_ruta), mejor_dist))
             
-            # --- PRINT INFO ---
             ruta_nombres = " -> ".join([nombres_ciudades[idx] for idx in mejor_ruta])
             print(f"[Intento #{contador}] ¡NUEVO RECORD ENCONTRADO!")
             print(f"   Ruta: {ruta_nombres}")
@@ -95,7 +120,6 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
         
         print(f"\nEstoy en {nombres_ciudades[actual]}, mirando vecinos:")
         
-        # Buscar vecino mas cercano
         for vecino in range(n):
             if vecino not in visitadas:
                 d = matriz_dist[actual, vecino]
@@ -105,7 +129,6 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
                     mejor_dist_local = d
                     siguiente = vecino
         
-        # Tomar decision
         print(f"   >>> DECISION: El mas cercano es {nombres_ciudades[siguiente]} ({mejor_dist_local:.4f})")
         
         dist_total += mejor_dist_local
@@ -114,7 +137,6 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
         visitadas.add(actual)
         historial.append(list(ruta))
     
-    # Volver al origen
     dist_retorno = matriz_dist[actual, inicio]
     print(f"\nTodas las ciudades visitadas. Regresando a {nombres_ciudades[inicio]} (Distancia: {dist_retorno:.4f})")
     
@@ -136,7 +158,6 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
     for i, paso in enumerate(historial):
         ax.clear()
         
-        # Configurar mapa base
         ax.set_title(f"{titulo_ventana}\nEstado: {i+1}/{len(historial)}", fontsize=12)
         ax.set_xlabel("Longitud")
         ax.set_ylabel("Latitud")
@@ -149,7 +170,6 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
             ax.annotate(txt, (lons[idx], lats[idx]), xytext=(5, 5), 
                         textcoords='offset points', fontsize=9)
         
-        # Dibujar ruta dinamica
         if es_optimo:
             ruta_idxs, dist = paso
             color = 'red'
@@ -177,6 +197,10 @@ def reproducir_en_vivo(historial, titulo_ventana, es_optimo=False, velocidad=0.5
 # =============================================================================
 if __name__ == "__main__":
     matriz = construir_matriz_distancias()
+    
+    # Printear matriz completa sin recortes
+    mostrar_matriz(matriz, nombres_ciudades)
+    
     ruta_ex, dist_ex, hist_ex = busqueda_exhaustiva(matriz)
     ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz)
     
@@ -184,14 +208,12 @@ if __name__ == "__main__":
     print("CALCULOS FINALIZADOS. INICIANDO GRAFICOS...")
     print("="*40)
     
-    print("\n--- MODO VISUALIZACIoN EN VIVO ---")
+    print("\n--- MODO VISUALIZACION EN VIVO ---")
     input("Presiona ENTER para ver la animacion de Heuristica (Vecino Mas Cercano)...")
-    
     reproducir_en_vivo(hist_nn, "Heuristica Vecino Mas Cercano", es_optimo=False, velocidad=0.8)
     
     print("\nLa ventana anterior mostro el resultado final.")
     input("Cierra la ventana del grafico y presiona ENTER para ver la animacion de Busqueda Exhaustiva...")
-    
     reproducir_en_vivo(hist_ex, "Busqueda Exhaustiva (Mejorando Rutas)", es_optimo=True, velocidad=0.5)
     
     print("\n¡Demostracion finalizada!")
