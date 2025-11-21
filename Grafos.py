@@ -204,7 +204,7 @@ ruta_nn, dist_nn, hist_nn = vecino_mas_cercano(matriz)
 t_fin_nn = time.time()
 tiempo_nn = t_fin_nn - t_inicio_nn
 
-# --- TABLA COMPARATIVA CON NOMBRES LARGOS ---
+# --- TABLA COMPARATIVA  ---
 # Ajustamos el ancho de la primera columna a 35 caracteres
 ancho_nombre = 35
 ancho_tabla = ancho_nombre + 15 + 15 + 6 # +6 por los separadores ' | '
