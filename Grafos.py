@@ -1,10 +1,12 @@
+# tsp_grafo_combinado.py
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 import time
+import math
 
 # ----------------------------
-#  Datos (Originales: Nueva York, Los Ángeles, etc.)
+#  Datos (puedes cambiarlos)
 # ----------------------------
 coordenadas = {
     "Nueva York": (40.670, -73.940),
@@ -24,10 +26,11 @@ n = len(nombres_ciudades)
 #  Funciones matemáticas y construcción de la matriz
 # ---------------------------------------------------
 def distancia_euclidiana(c1_idx, c2_idx):
-    """Distancia euclidiana entre ciudad índice c1_idx y c2_idx."""
+    """Distancia euclidiana entre ciudad índice c1_idx y c2_idx.
+    (Se usa diferencia en latitud y longitud en grados.)"""
     lat1, lon1 = coordenadas[nombres_ciudades[c1_idx]]
     lat2, lon2 = coordenadas[nombres_ciudades[c2_idx]]
-    return np.sqrt((lon2 - lon1)**2 + (lat2 - lat1)**2)
+    return np.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2)
 
 def construir_matriz_distancias():
     """Construye la matriz simétrica n x n de distancias."""
@@ -40,14 +43,15 @@ def construir_matriz_distancias():
     return matriz
 
 def mostrar_matriz_bonita(matriz):
-    print("\n" + "█"*80)
+    """Imprime la matriz en formato tabular legible."""
+    print("\n" + "█" * 80)
     print(f"{' MATRIZ DE DISTANCIAS (GRADOS) ':^80}")
-    print("█"*80)
-    # Encabezado
+    print("█" * 80)
+    # Encabezado (recorta nombre para mantener columnas razonables)
     print(f"{'':<12}", end="")
     for nombre in nombres_ciudades:
         print(f"{nombre[:9]:>10}", end="")
-    print("\n" + "-"*85)
+    print("\n" + "-" * 85)
     # Filas
     for i, fila in enumerate(matriz):
         print(f"{nombres_ciudades[i]:<12}", end="")
@@ -63,39 +67,38 @@ def mostrar_matriz_bonita(matriz):
 #  Búsqueda exhaustiva (CON PRINTS DETALLADOS)
 # ---------------------------------------------------
 def busqueda_exhaustiva(matriz_dist):
-    print("\n" + "="*80)
+    """Búsqueda exhaustiva con prints cada vez que se encuentra un nuevo récord."""
+    print("\n" + "=" * 80)
     print(f"{' INICIANDO BÚSQUEDA EXHAUSTIVA (FUERZA BRUTA) ':^80}")
-    print("="*80)
-    
+    print("=" * 80)
+
     indices = list(range(n))
     inicio = 0
     otros = indices[1:]
     mejor_dist = float('inf')
     mejor_ruta = None
-    historial = []  
+    historial = []
     contador = 0
-    
-    # Calculamos total permutaciones para info
-    import math
+
     total_perms = math.factorial(n - 1)
     print(f" -> Se evaluarán {total_perms} rutas posibles...")
 
     for perm in itertools.permutations(otros):
         contador += 1
         ruta_actual = [inicio] + list(perm) + [inicio]
-        
+
+        # calc distancia total de la ruta_actual
         dist_actual = 0.0
         for i in range(len(ruta_actual) - 1):
-            a = ruta_actual[i]; b = ruta_actual[i+1]
+            a = ruta_actual[i]; b = ruta_actual[i + 1]
             dist_actual += matriz_dist[a, b]
 
         if dist_actual < mejor_dist:
             mejor_dist = dist_actual
             mejor_ruta = list(ruta_actual)
-            historial.append((list(mejor_ruta), mejor_dist)) 
-            
-            # --- PRINT DE RECORD ---
-            ruta_nombres = " -> ".join([nombres_ciudades[idx][:3] for idx in mejor_ruta])
+            historial.append((list(mejor_ruta), mejor_dist))
+
+            ruta_nombres = " -> ".join([nombres_ciudades[idx][:9] for idx in mejor_ruta])
             print(f" [Intento {contador}/{total_perms}] ¡NUEVO RÉCORD! Distancia: {mejor_dist:.4f}")
             print(f"    Ruta: {ruta_nombres}")
 
@@ -107,15 +110,15 @@ def busqueda_exhaustiva(matriz_dist):
 #  Heurística: Vecino Más Cercano (CON PRINTS DETALLADOS)
 # ---------------------------------------------------
 def vecino_mas_cercano(matriz_dist, inicio=0):
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print(f"{' INICIANDO VECINO MÁS CERCANO (GREEDY) ':^80}")
-    print("="*80)
+    print("=" * 80)
 
     ruta = [inicio]
     visitadas = {inicio}
     actual = inicio
     dist_total = 0.0
-    historial = [list(ruta)] 
+    historial = [list(ruta)]
 
     print(f"Comenzamos en: {nombres_ciudades[inicio].upper()}")
 
@@ -123,21 +126,21 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
         print(f"\nEstoy en {nombres_ciudades[actual]}... buscando destino más cercano:")
         mejor_dist_local = float('inf')
         siguiente = None
-        
+
         # buscar el vecino no visitado más cercano
         for vecino in range(n):
             if vecino in visitadas:
                 continue
-            
+
             d = matriz_dist[actual, vecino]
             print(f"   - ¿Ir a {nombres_ciudades[vecino]}? Distancia: {d:.2f}", end="")
-            
+
             if d < mejor_dist_local:
                 print(" (¡Candidato actual!)")
                 mejor_dist_local = d
                 siguiente = vecino
             else:
-                print("") # Nueva línea
+                print("")
 
         # mover al siguiente
         print(f" >>> DECISIÓN: Viajo a {nombres_ciudades[siguiente]} (Dist: {mejor_dist_local:.2f})")
@@ -151,31 +154,45 @@ def vecino_mas_cercano(matriz_dist, inicio=0):
     dist_retorno = matriz_dist[actual, inicio]
     print(f"\nTodas visitadas. Regresando al inicio ({nombres_ciudades[inicio]})...")
     print(f" >>> Retorno: {dist_retorno:.2f}")
-    
+
     dist_total += dist_retorno
     ruta.append(inicio)
     historial.append(list(ruta))
-    
+
     return ruta, dist_total, historial
 
 # ---------------------------------------------------
 #  Visualización: grafo completo + resaltado de ruta
 # ---------------------------------------------------
+# Tamaños (Opción A)
+TITULO_FS = 16
+EJES_FS = 15
+CIUDADES_FS = 16
+LEYENDA_FS = 12
+
 def dibujar_grafo_completo(ax, ciudades, color_arista='#cccccc'):
+    """Dibuja todas las aristas, nodos y etiquetas una sola vez."""
     lats = [c[0] for c in ciudades]
     lons = [c[1] for c in ciudades]
 
     # dibujar todas las aristas (i,j) con i<j
     for i in range(len(ciudades)):
-        for j in range(i+1, len(ciudades)):
-            ax.plot([lons[i], lons[j]], [lats[i], lats[j]], color=color_arista, linewidth=0.8, zorder=1)
+        for j in range(i + 1, len(ciudades)):
+            ax.plot([lons[i], lons[j]], [lats[i], lats[j]], color=color_arista,
+                    linewidth=0.8, zorder=1)
 
-    # dibujar nodos y etiquetas
+    # nodos y etiquetas
     ax.scatter(lons, lats, c='blue', s=80, zorder=3)
     for idx, name in enumerate(nombres_ciudades):
-        ax.annotate(name, (lons[idx], lats[idx]), xytext=(5,5), textcoords='offset points', fontsize=9, zorder=4)
+        ax.annotate(name, (lons[idx], lats[idx]), xytext=(5, 5),
+                    textcoords='offset points', fontsize=CIUDADES_FS, zorder=4)
+
+    # etiquetas de los ejes (solo una vez)
+    ax.set_xlabel("Longitud (lon)", fontsize=EJES_FS)
+    ax.set_ylabel("Latitud (lat)", fontsize=EJES_FS)
 
 def resaltar_ruta(ax, ruta_idxs, color='red', ancho=3, etiqueta=None):
+    """Dibuja la ruta (lista de índices) sobre ax."""
     lats_r = [coordenadas[nombres_ciudades[i]][0] for i in ruta_idxs]
     lons_r = [coordenadas[nombres_ciudades[i]][1] for i in ruta_idxs]
     ax.plot(lons_r, lats_r, color=color, linewidth=ancho, zorder=5, label=etiqueta)
@@ -186,27 +203,33 @@ def resaltar_ruta(ax, ruta_idxs, color='red', ancho=3, etiqueta=None):
 def animar_historial(historial, titulo, velocidad=0.8, es_exhaustivo=False):
     ciudades = [coordenadas[name] for name in nombres_ciudades]
     plt.ion()
-    fig, ax = plt.subplots(figsize=(8,8))
-    fig.canvas.manager.set_window_title(titulo)
+    fig, ax = plt.subplots(figsize=(8, 8))
+    # intentar poner título de ventana, fallará silenciosamente si no aplica
+    try:
+        fig.canvas.manager.set_window_title(titulo)
+    except Exception:
+        pass
 
     for i, paso in enumerate(historial):
         ax.clear()
-        ax.set_title(f"{titulo}  (Paso {i+1}/{len(historial)})")
-        ax.set_xlabel("Longitud (lon)")
-        ax.set_ylabel("Latitud (lat)")
+        ax.set_title(f"{titulo}  (Paso {i+1}/{len(historial)})", fontsize=TITULO_FS)
+        ax.set_xlabel("Longitud (lon)", fontsize=EJES_FS)
+        ax.set_ylabel("Latitud (lat)", fontsize=EJES_FS)
 
+        # dibujar grafo completo en gris
         dibujar_grafo_completo(ax, ciudades)
 
+        # dependiendo del tipo, extraemos la ruta
         if es_exhaustivo:
             ruta_idxs, dist = paso
             etiqueta = f"Record actual: {dist:.4f}"
             resaltar_ruta(ax, ruta_idxs, color='red', ancho=3, etiqueta=etiqueta)
-            ax.legend(loc='upper right')
+            ax.legend(loc='upper right', fontsize=LEYENDA_FS)
         else:
             ruta_idxs = paso
             etiqueta = f"Construcción NN (paso {i+1})"
-            resaltar_ruta(ax, ruta_idxs + [] , color='green', ancho=3, etiqueta=etiqueta)
-            ax.legend(loc='upper right')
+            resaltar_ruta(ax, ruta_idxs, color='green', ancho=3, etiqueta=etiqueta)
+            ax.legend(loc='upper right', fontsize=LEYENDA_FS)
 
         ax.grid(True, linestyle='--', alpha=0.4)
         plt.draw()
@@ -214,24 +237,27 @@ def animar_historial(historial, titulo, velocidad=0.8, es_exhaustivo=False):
 
     plt.ioff()
     plt.show()
-    
+
+# ---------------------------------------------------
+#  Gráfico simple de solo puntos (sin conexiones)
+# ---------------------------------------------------
 def grafico_solo_puntos():
     ciudades = [coordenadas[name] for name in nombres_ciudades]
     lats = [c[0] for c in ciudades]
     lons = [c[1] for c in ciudades]
 
-    plt.figure(figsize=(8,8))
+    plt.figure(figsize=(8, 8))
     plt.scatter(lons, lats, c='blue', s=100)
 
     for idx, name in enumerate(nombres_ciudades):
-        plt.annotate(name, (lons[idx], lats[idx]), xytext=(5,5), textcoords='offset points')
+        plt.annotate(name, (lons[idx], lats[idx]), xytext=(5, 5),
+                     textcoords='offset points', fontsize=CIUDADES_FS)
 
-    plt.title("Mapa de ciudades")
-    plt.xlabel("Longitud")
-    plt.ylabel("Latitud")
+    plt.title("Mapa de ciudades (sin conexiones)", fontsize=TITULO_FS)
+    plt.xlabel("Longitud", fontsize=EJES_FS)
+    plt.ylabel("Latitud", fontsize=EJES_FS)
     plt.grid(True, linestyle='--', alpha=0.4)
     plt.show()
-
 
 # ---------------------------------------------------
 #  Ejecución principal
@@ -260,13 +286,13 @@ def main():
     # ----------------------------
     #  TABLA COMPARATIVA FINAL
     # ----------------------------
-    print("\n" + "█"*80)
+    print("\n" + "█" * 80)
     print(f"{' RESUMEN DE RENDIMIENTO ':^80}")
-    print("█"*80)
-    print(f"{'Método':<25} | {'Tiempo (seg)':<15} | {'Distancia Total':<15}")
+    print("█" * 80)
+    print(f"{'Método':<30} | {'Tiempo (seg)':<15} | {'Distancia Total':<15}")
     print("-" * 80)
-    print(f"{'Exhaustivo (Óptimo)':<25} | {tiempo_ex:<15.6f} | {dist_ex:<15.4f}")
-    print(f"{'Vecino Más Cercano':<25} | {tiempo_nn:<15.6f} | {dist_nn:<15.4f}")
+    print(f"{'Exhaustivo (Óptimo)':<30} | {tiempo_ex:<15.6f} | {dist_ex:<15.4f}")
+    print(f"{'Vecino Más Cercano':<30} | {tiempo_nn:<15.6f} | {dist_nn:<15.4f}")
     print("-" * 80)
 
     # Gap / comparación
@@ -276,16 +302,20 @@ def main():
     else:
         print("\nNo se pudo calcular gap.")
 
-    # Mostrar grafico final
+    # Mostrar grafico final: grafo completo con ambas rutas superpuestas
     ciudades = [coordenadas[name] for name in nombres_ciudades]
-    fig, ax = plt.subplots(figsize=(8,8))
-    fig.canvas.manager.set_window_title("Comparativa Final: Greedy vs Óptimo")
+    fig, ax = plt.subplots(figsize=(8, 8))
+    try:
+        fig.canvas.manager.set_window_title("Comparativa Final: Greedy vs Óptimo")
+    except Exception:
+        pass
+
     dibujar_grafo_completo(ax, ciudades)
     resaltar_ruta(ax, ruta_ex, color='red', ancho=3, etiqueta=f"Óptimo ({dist_ex:.4f})")
     resaltar_ruta(ax, ruta_nn, color='green', ancho=2, etiqueta=f"NN ({dist_nn:.4f})")
-    ax.legend(loc='upper right')
-    ax.set_xlabel("Longitud (lon)")
-    ax.set_ylabel("Latitud (lat)")
+    ax.legend(loc='upper right', fontsize=LEYENDA_FS)
+    ax.set_xlabel("Longitud (lon)", fontsize=EJES_FS)
+    ax.set_ylabel("Latitud (lat)", fontsize=EJES_FS)
     ax.grid(True, linestyle='--', alpha=0.4)
     plt.show()
 
