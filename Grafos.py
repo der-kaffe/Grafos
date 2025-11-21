@@ -181,11 +181,35 @@ def animar_historial(historial, titulo, velocidad=0.8, es_exhaustivo=False):
 
     plt.ioff()
     plt.show()
+    
+# ---------------------------------------------------
+#  Gráfico simple de solo puntos (sin conexiones)
+# ---------------------------------------------------
+def grafico_solo_puntos():
+    ciudades = [coordenadas[name] for name in nombres_ciudades]
+    lats = [c[0] for c in ciudades]
+    lons = [c[1] for c in ciudades]
+
+    plt.figure(figsize=(8,8))
+    plt.scatter(lons, lats, c='blue', s=100)
+
+    for idx, name in enumerate(nombres_ciudades):
+        plt.annotate(name, (lons[idx], lats[idx]), xytext=(5,5), textcoords='offset points')
+
+    plt.title("Mapa de ciudades (sin conexiones)")
+    plt.xlabel("Longitud")
+    plt.ylabel("Latitud")
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.show()
+
 
 # ---------------------------------------------------
 #  Ejecución principal
 # ---------------------------------------------------
 def main():
+    print("\nMostrando gráfico de puntos (sin conexiones)...")
+    grafico_solo_puntos()
+
     matriz = construir_matriz_distancias()
 
     # imprime matriz (simple)
