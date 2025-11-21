@@ -267,4 +267,4 @@ def main():
     animar_historial(hist_ex, "Exhaustivo (records encontrados durante la búsqueda)", velocidad=0.6, es_exhaustivo=True)
 
 if __name__ == "__main__":
-    main()
+    main()  
