@@ -1,4 +1,3 @@
-# tsp_grafo_completo.py
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
@@ -40,6 +39,28 @@ def construir_matriz_distancias():
             matriz[j, i] = d
     return matriz
 
+def mostrar_matriz(matriz, nombres):
+    """Muestra la matriz de distancias en consola con formato."""
+    ancho_col = 16
+    ancho_nombre_fila = 16
+    ancho_total = ancho_nombre_fila + (ancho_col * len(nombres))
+    print("\n" + "="*ancho_total)
+    print(f"{'MATRIZ DE DISTANCIAS (Grados Euclidianos)':^{ancho_total}}")
+    print("="*ancho_total)
+
+    header = f"{'':<{ancho_nombre_fila}}" + "".join([f"{nombre:>{ancho_col}}" for nombre in nombres])
+    print(header)
+    print("-" * len(header))
+    for i, fila in enumerate(matriz):
+        linea = f"{nombres[i]:<{ancho_nombre_fila}}"
+        for val in fila:
+            if val == 0:
+                linea += f"{'-':>{ancho_col}}"
+            else:
+                linea += f"{val:{ancho_col}.4f}"
+        print(linea)
+    print("-" * len(header))
+
 # ---------------------------------------------------
 #  Búsqueda exhaustiva (exacta)
 # ---------------------------------------------------
@@ -70,7 +91,12 @@ def busqueda_exhaustiva(matriz_dist):
             mejor_dist = dist_actual
             mejor_ruta = route_copy = list(ruta_actual)
             historial.append((route_copy, mejor_dist))  # guardamos el nuevo record
+            print(f"[Intento #{contador}] ¡RECORD ENCONTRADO!")
+            print(f"   Ruta: {' -> '.join([nombres_ciudades[idx] for idx in mejor_ruta])}")
+            print(f"   Distancia: {mejor_dist:.4f}")
+            print("-" * 20)
 
+    print(f"Total de rutas evaluadas: {contador}")
     return mejor_ruta, mejor_dist, historial
 
 # ---------------------------------------------------
@@ -181,27 +207,6 @@ def animar_historial(historial, titulo, velocidad=0.8, es_exhaustivo=False):
 
     plt.ioff()
     plt.show()
-    
-# ---------------------------------------------------
-#  Gráfico simple de solo puntos (sin conexiones)
-# ---------------------------------------------------
-def grafico_solo_puntos():
-    ciudades = [coordenadas[name] for name in nombres_ciudades]
-    lats = [c[0] for c in ciudades]
-    lons = [c[1] for c in ciudades]
-
-    plt.figure(figsize=(8,8))
-    plt.scatter(lons, lats, c='blue', s=100)
-
-    for idx, name in enumerate(nombres_ciudades):
-        plt.annotate(name, (lons[idx], lats[idx]), xytext=(5,5), textcoords='offset points')
-
-    plt.title("Mapa de ciudades (sin conexiones)")
-    plt.xlabel("Longitud")
-    plt.ylabel("Latitud")
-    plt.grid(True, linestyle='--', alpha=0.4)
-    plt.show()
-
 
 # ---------------------------------------------------
 #  Ejecución principal
@@ -212,10 +217,9 @@ def main():
 
     matriz = construir_matriz_distancias()
 
-    # imprime matriz (simple)
-    print("Matriz de distancias (euclidiana):")
-    np.set_printoptions(precision=4, suppress=True)
-    print(matriz)
+    # imprime matriz (detallada)
+    print("\nMatriz de distancias (euclidiana):")
+    mostrar_matriz(matriz, nombres_ciudades)
 
     # 1) Exhaustivo (medición de tiempo)
     t0 = time.time()
