@@ -1,0 +1,14 @@
+# TSP GUI - Interfaz Gráfica Interactiva con Streamlit
+# Python 3.8+
+
+# Framework web interactivo
+streamlit>=1.28.0
+
+# Gráficos interactivos
+plotly>=5.17.0
+
+# Manipulación de datos
+pandas>=2.0.0
+
+# Cálculo numérico
+numpy>=1.24.0

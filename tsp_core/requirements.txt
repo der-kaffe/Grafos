@@ -1,0 +1,8 @@
+# TSP Core - Algoritmos y Visualización con Matplotlib
+# Python 3.8+
+
+# Cálculo numérico y matrices
+numpy>=1.24.0
+
+# Visualización y gráficos
+matplotlib>=3.7.0
