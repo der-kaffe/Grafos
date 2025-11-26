@@ -8,7 +8,7 @@ CIUDADES_FS = 14    # Tamaño de la fuente de los NOMBRES de las CIUDADES en el 
 LEYENDA_FS = 12     # Tamaño de la fuente del TEXTO de la LEYENDA
 
 # Constantes de tamaño de gráficos (ajusta estos valores para cambiar el tamaño)
-GRAPH_WIDTH = 1150   # Ancho de los gráficos en píxeles
+GRAPH_WIDTH = 1000   # Ancho de los gráficos en píxeles
 GRAPH_HEIGHT = 700  # Alto de los gráficos en píxeles
 
 def dibujar_grafo_completo(fig, ciudades, color_arista='#cccccc'):

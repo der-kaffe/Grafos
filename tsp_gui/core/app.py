@@ -92,7 +92,7 @@ def render_seccion_exhaustiva(matriz):
     col_ex_control, col_ex_visual = st.columns([1, 2])
 
     with col_ex_control:
-        st.subheader("🎮 Control de Ejecución")
+        st.subheader(" Control de Ejecución")
 
         if st.button("▶ Ejecutar Búsqueda Exhaustiva", use_container_width=True, type="primary"):
             clear_logs_ex()
@@ -110,7 +110,7 @@ def render_seccion_exhaustiva(matriz):
             ruta_ex_nombres = convertir_ruta_a_nombres(ruta_ex)
 
             st.markdown("<div class='light-divider'></div>", unsafe_allow_html=True)
-            st.subheader("📊 Resultados")
+            st.subheader(" Resultados")
 
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:
@@ -118,11 +118,11 @@ def render_seccion_exhaustiva(matriz):
             with metric_col2:
                 st.markdown(metric_tiempo_exhaustiva(tiempo_ex), unsafe_allow_html=True)
 
-            st.markdown("**🛣️ Ruta Óptima:**")
+            st.markdown("** Ruta Óptima:**")
             st.info(" → ".join(ruta_ex_nombres))
 
     with col_ex_visual:
-        st.subheader("🎬 Visualización del Proceso")
+        st.subheader(" Visualización del Proceso")
 
         resultado_ex = get_resultado_ex()
         if resultado_ex is not None:
@@ -142,7 +142,7 @@ def render_seccion_exhaustiva(matriz):
     # ← AQUÍ: Fuera de las columnas, logs detallados ocupan todo el ancho
     resultado_ex = get_resultado_ex()
     if resultado_ex is not None:
-        with st.expander("📝 Ver logs detallados"):
+        with st.expander(" Ver logs detallados"):
             st.code("\n".join(get_logs_ex()) or "Sin logs", language="text")
 
 
@@ -155,7 +155,7 @@ def render_seccion_vecino(matriz):
     col_nn_control, col_nn_visual = st.columns([1, 2])
 
     with col_nn_control:
-        st.subheader("🎮 Control de Ejecución")
+        st.subheader(" Control de Ejecución")
 
         if st.button("▶ Ejecutar Vecino Más Cercano", use_container_width=True, type="primary"):
             clear_logs_nn()
@@ -174,7 +174,7 @@ def render_seccion_vecino(matriz):
             ruta_nn_nombres = convertir_ruta_a_nombres(ruta_nn)
 
             st.markdown("<div class='light-divider'></div>", unsafe_allow_html=True)
-            st.subheader("📊 Resultados")
+            st.subheader(" Resultados")
 
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:
@@ -182,11 +182,11 @@ def render_seccion_vecino(matriz):
             with metric_col2:
                 st.markdown(metric_tiempo_vecino(tiempo_nn), unsafe_allow_html=True)
 
-            st.markdown("**🛣️ Ruta Heurística:**")
+            st.markdown("** Ruta Heurística:**")
             st.info(" → ".join(ruta_nn_nombres))
 
     with col_nn_visual:
-        st.subheader("🎬 Visualización del Proceso")
+        st.subheader(" Visualización del Proceso")
 
         resultado_nn = get_resultado_nn()
         if resultado_nn is not None:
@@ -206,7 +206,7 @@ def render_seccion_vecino(matriz):
     # ← AQUÍ: Fuera de las columnas, logs detallados ocupan todo el ancho
     resultado_nn = get_resultado_nn()
     if resultado_nn is not None:
-        with st.expander("📝 Ver logs detallados"):
+        with st.expander(" Ver logs detallados"):
             st.code("\n".join(get_logs_nn()) or "Sin logs", language="text")
 
 
@@ -231,7 +231,7 @@ def render_seccion_comparacion(matriz):
                     logger=append_log_ex
                 )
                 set_resultado_ex(ruta_ex, dist_ex, tiempo_ex, hist_ex)
-            st.success("✅ Búsqueda Exhaustiva completada")
+            st.success(" Búsqueda Exhaustiva completada")
 
         # Ejecutar vecino más cercano si no existe
         if resultado_nn is None:
@@ -243,9 +243,9 @@ def render_seccion_comparacion(matriz):
                     logger=append_log_nn
                 )
                 set_resultado_nn(ruta_nn, dist_nn, tiempo_nn, hist_nn)
-            st.success("✅ Vecino Más Cercano completado")
+            st.success(" Vecino Más Cercano completado")
 
-        st.success("🎉 Comparación lista")
+        st.success(" Comparación lista")
         # Forzar rerun para mostrar los resultados
         st.rerun()
 
@@ -265,12 +265,12 @@ def render_seccion_comparacion(matriz):
     col_tabla, col_metricas = st.columns([2, 1])
 
     with col_tabla:
-        st.subheader("📊 Tabla Comparativa")
+        st.subheader(" Tabla Comparativa")
         df_resumen = crear_dataframe_comparativo(tiempo_ex, dist_ex, tiempo_nn, dist_nn)
         st.dataframe(df_resumen, use_container_width=True)
 
     with col_metricas:
-        st.subheader("📈 Métricas Clave")
+        st.subheader(" Métricas Clave")
         gap = calcular_gap(dist_ex, dist_nn)
         if gap is not None:
             st.markdown(metric_gap_optimalidad(gap), unsafe_allow_html=True)
@@ -278,7 +278,7 @@ def render_seccion_comparacion(matriz):
         factor_velocidad = (tiempo_ex / tiempo_nn) if (tiempo_nn and tiempo_nn > 0) else 0
         st.markdown(metric_factor_velocidad(factor_velocidad), unsafe_allow_html=True)
 
-    st.subheader("💡 Análisis de Resultados")
+    st.subheader(" Análisis de Resultados")
 
     gap = calcular_gap(dist_ex, dist_nn)
     if gap is not None:
@@ -287,11 +287,11 @@ def render_seccion_comparacion(matriz):
         else:
             st.markdown(alert_analisis_gap_alto(gap), unsafe_allow_html=True)
 
-    st.subheader("🗺️ Comparación Visual de Rutas")
+    st.subheader(" Comparación Visual de Rutas")
     fig_comp = get_grafico_comparativo(ruta_ex, dist_ex, ruta_nn, dist_nn)
     st.plotly_chart(fig_comp, use_container_width=False)
 
-    with st.expander("📚 Ver conclusiones detalladas"):
+    with st.expander(" Ver conclusiones detalladas"):
         st.markdown(
             conclusiones_detalladas(tiempo_ex, dist_ex, tiempo_nn, dist_nn, gap),
             unsafe_allow_html=True
