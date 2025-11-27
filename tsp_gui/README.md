@@ -43,22 +43,25 @@ La aplicación está diseñada con un tema oscuro moderno y una arquitectura mod
 
 - Explora todas las permutaciones posibles.
 - Muestra logs detallados de cada nuevo récord encontrado.
-- Animación del proceso con actualización en tiempo real.
+- **Animación solo al ejecutar**: La animación se muestra únicamente al presionar el botón de ejecución.
+- **Gráfico estático en reruns**: En navegaciones posteriores, se muestra solo el resultado final sin volver a animar.
 - Métricas: distancia óptima y tiempo de ejecución.
 
 ### 4. Vecino Más Cercano (Heurística)
 
 - Construcción greedy de la ruta.
 - Logs paso a paso de las decisiones tomadas.
-- Animación de la construcción de la ruta.
+- **Animación solo al ejecutar**: La animación se muestra únicamente al presionar el botón de ejecución.
+- **Gráfico estático en reruns**: En navegaciones posteriores, se muestra solo el resultado final sin volver a animar.
 - Métricas: distancia heurística y tiempo de ejecución.
 
 ### 5. Comparación y Análisis
 
+- **Sin animaciones**: Utiliza solo los resultados ya calculados.
 - Tabla comparativa de ambos métodos.
 - Cálculo del gap de optimalidad (% de desviación).
 - Factor de velocidad (cuántas veces más rápido es el heurístico).
-- Gráfico superpuesto con ambas rutas.
+- Gráfico superpuesto con ambas rutas (estático).
 - Análisis automático con recomendaciones.
 
 ## 📁 Estructura del Proyecto
@@ -170,6 +173,12 @@ numpy>=1.24.0
 cd tsp_gui
 ```
 
+### ejecucion rapida
+
+```bash
+ streamlit run main.py
+```
+
 ### 2. Crear un entorno virtual (recomendado)
 
 ```bash
@@ -215,19 +224,22 @@ La aplicación se abrirá automáticamente en tu navegador predeterminado (por d
 3. **Ejecutar Búsqueda Exhaustiva**:
 
    - Presiona el botón "▶ Ejecutar Búsqueda Exhaustiva".
-   - Observa la animación del proceso.
+   - Observa la animación del proceso (se muestra solo una vez).
    - Revisa los logs detallados y las métricas.
+   - En navegaciones posteriores, verás solo el gráfico final sin animación.
 
 4. **Ejecutar Vecino Más Cercano**:
 
    - Presiona el botón "▶ Ejecutar Vecino Más Cercano".
-   - Observa cómo se construye la ruta paso a paso.
+   - Observa cómo se construye la ruta paso a paso (animación única).
    - Revisa los logs y métricas.
+   - En navegaciones posteriores, verás solo el gráfico final sin animación.
 
 5. **Comparar Resultados**:
    - Ve a la sección de "Comparación y Análisis".
-   - Presiona "▶ Ejecutar Comparación" (ejecutará automáticamente lo que falte).
-   - Analiza la tabla comparativa, métricas y gráfico superpuesto.
+   - Presiona "▶ Mostrar Comparación".
+   - Si falta ejecutar algún algoritmo, se te notificará.
+   - Analiza la tabla comparativa, métricas y gráfico superpuesto (sin animaciones).
    - Lee las conclusiones y recomendaciones.
 
 ## 🏗️ Arquitectura
@@ -472,59 +484,81 @@ main.py
 ### 2. Ejecución de Algoritmo (Ejemplo: Exhaustiva)
 
 ```
-Usuario presiona botón
-  │
-  ├─> clear_logs_ex()                 # Limpia logs anteriores
-  │
-  ├─> ejecutar_busqueda_exhaustiva()
-  │     ├─> construir_matriz_distancias()
-  │     ├─> busqueda_exhaustiva()
-  │     │     └─> append_log_ex()     # Logs en tiempo real
-  │     └─> return (ruta, dist, tiempo, historial)
-  │
-  ├─> set_resultado_ex()              # Guarda en session_state
-  │
-  └─> st.success()                    # Notifica al usuario
+Usuario presiona botón (ejecutar_ex = True)
+│
+├─> clear_logs_ex() # Limpia logs anteriores
+│
+├─> ejecutar_busqueda_exhaustiva()
+│ ├─> construir_matriz_distancias()
+│ ├─> busqueda_exhaustiva()
+│ │ └─> append_log_ex() # Logs en tiempo real
+│ └─> return (ruta, dist, tiempo, historial)
+│
+├─> set_resultado_ex() # Guarda en session_state
+│
+├─> st.success() # Notifica al usuario
+│
+└─> animar_historial() # Animación SOLO en esta ejecución
+└─> placeholder_ex.plotly_chart()
+
+En reruns posteriores (ejecutar_ex = False):
+│
+├─> get_resultado_ex() # Recupera resultados guardados
+│
+└─> Mostrar gráfico estático final
+├─> crear figura Plotly
+├─> dibujar_grafo_completo()
+├─> resaltar_ruta()
+└─> placeholder_ex.plotly_chart() # Sin animación
 ```
 
-### 3. Animación
+### 3. Animación (Solo al Ejecutar)
 
 ```
 render_seccion_exhaustiva()
-  │
-  ├─> get_resultado_ex()              # Recupera resultados
-  │
-  └─> animar_historial()
-        ├─> placeholder = st.empty()
-        │
-        └─> for paso in historial:
-              ├─> crear figura Plotly
-              ├─> dibujar_grafo_completo()
-              ├─> resaltar_ruta()
-              ├─> placeholder.plotly_chart()
-              └─> time.sleep()
+│
+├─> placeholder_ex = st.empty() # Un solo contenedor
+│
+├─> get_resultado_ex() # Recupera resultados
+│
+├─> if resultado_ex AND ejecutar_ex:
+│ └─> animar_historial() # Animar SOLO al presionar botón
+│ ├─> for paso in historial:
+│ │ ├─> crear figura Plotly
+│ │ ├─> dibujar_grafo_completo()
+│ │ ├─> resaltar_ruta()
+│ │ ├─> placeholder_ex.plotly_chart()
+│ │ └─> time.sleep()
+│ └─> Último frame queda visible
+│
+└─> elif resultado_ex: # Reruns posteriores
+└─> Mostrar gráfico estático final
+└─> placeholder_ex.plotly_chart() # Sin animación
 ```
 
-### 4. Comparación
+### 4. Comparación (Sin Animaciones)
 
 ```
 render_seccion_comparacion()
-  │
-  ├─> get_resultado_ex()
-  ├─> get_resultado_nn()
-  │
-  ├─> Si falta alguno:
-  │     └─> ejecutar automáticamente
-  │
-  ├─> crear_dataframe_comparativo()
-  ├─> calcular_gap()
-  ├─> get_grafico_comparativo()
-  │
-  └─> Renderizar:
-        ├─> Tabla comparativa
-        ├─> Métricas (gap, factor velocidad)
-        ├─> Gráfico superpuesto
-        └─> Conclusiones
+│
+├─> get_resultado_ex() # Recupera resultados guardados
+├─> get_resultado_nn() # Recupera resultados guardados
+│
+├─> Si falta alguno:
+│ └─> Mostrar advertencia (NO ejecuta automáticamente)
+│
+├─> Si ambos existen y se presiona botón:
+│ ├─> crear_dataframe_comparativo()
+│ ├─> calcular_gap()
+│ ├─> get_grafico_comparativo() # Gráfico estático
+│ │
+│ └─> Renderizar:
+│ ├─> Tabla comparativa
+│ ├─> Métricas (gap, factor velocidad)
+│ ├─> Gráfico superpuesto (SIN animación)
+│ └─> Conclusiones
+│
+└─> Nota: NUNCA llama a animar_historial()
 ```
 
 ## 🎨 Personalización
