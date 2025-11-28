@@ -59,7 +59,7 @@ def render_seccion_ciudades():
         
         # Agregar imagen debajo de la tabla
         st.image(
-            "../apoyo_visual/mapa(ciudades).png",  # Cambia por la ruta de tu imagen
+            "../apoyo_visual/mapa9.png",  # Cambia por la ruta de tu imagen
             use_container_width=True  # Para que ocupe todo el ancho de la columna
         )
 
@@ -76,7 +76,7 @@ def render_seccion_ciudades():
 def render_seccion_matriz():
     st.markdown(SectionDistanceMatrix(), unsafe_allow_html=True)
     st.markdown(info_calculo_distancias(), unsafe_allow_html=True)
-    st.latex(r"d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}")
+    st.latex(r"d = \sqrt{(lat2 - lat1)^2 + (lon2 - lon1)^2}")
 
     # Mostrar matriz con nombres de ciudades
     df_matriz = get_matriz_distancias()

@@ -8,7 +8,7 @@ def animar_historial(
     historial,
     titulo,
     placeholder=None,
-    sleep=1.0,
+    sleep=0.5,
     es_exhaustivo=False,
     logger=None
 ):

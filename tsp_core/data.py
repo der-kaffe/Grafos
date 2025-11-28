@@ -8,8 +8,8 @@ coordenadas = {
     "Phoenix": (33.540, -112.070),
     "Filadelfia": (40.010, -75.130),
     "San Antonio": (29.460, -98.510),
-    # "San Diego": (32.715, -117.161),
-    # "Dallas": (32.779, -96.808)
+    "San Diego": (32.715, -117.161),
+    "Dallas": (32.779, -96.808)
 }
 
 nombres_ciudades = list(coordenadas.keys())
