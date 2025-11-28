@@ -76,6 +76,7 @@ def render_seccion_ciudades():
 def render_seccion_matriz():
     st.markdown(SectionDistanceMatrix(), unsafe_allow_html=True)
     st.markdown(info_calculo_distancias(), unsafe_allow_html=True)
+    st.latex(r"d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}")
 
     # Mostrar matriz con nombres de ciudades
     df_matriz = get_matriz_distancias()
